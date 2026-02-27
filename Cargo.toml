@@ -1,0 +1,26 @@
+[package]
+name = "replayr"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.102"
+axum = { version = "0.8.8", features = ["ws", "json"] }
+bytes = "1.11.1"
+cel = { version = "0.12.0", features = ["json"] }
+chrono = { version = "0.4.44", features = ["serde"] }
+clap = { version = "4.5.60", features = ["derive"] }
+async-stream = "0.3.6"
+futures = "0.3.32"
+http = "1.4.0"
+regex = "1.12.3"
+reqwest = { version = "0.13.2", default-features = false, features = ["rustls", "stream", "json"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+tokio = { version = "1.49.0", features = ["full"] }
+tokio-stream = "0.1.18"
+tower-http = { version = "0.6.8", features = ["cors"] }
+uuid = { version = "1.21.0", features = ["v4", "serde"] }
+
+[dev-dependencies]
+tempfile = "3.26.0"

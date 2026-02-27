@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="midnight">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Replayr Inspector</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="inspector">
+    <!-- Header / Control Bar -->
+    <header class="control-bar">
+      <div class="control-bar__left">
+        <div class="logo">
+          <svg class="logo__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v4M12 19v4M1 12h4M19 12h4"/>
+            <path d="M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+          </svg>
+          <span class="logo__text">REPLAYR</span>
+          <span class="logo__badge">INSPECTOR</span>
+        </div>
+
+        <div class="status-cluster">
+          <div class="status-led" data-status="connected" title="WebSocket Connected">
+            <span class="status-led__light"></span>
+            <span class="status-led__label">WS</span>
+          </div>
+          <div class="status-led" data-status="inactive" id="recordingLed" title="Recording Status">
+            <span class="status-led__light"></span>
+            <span class="status-led__label">REC</span>
+          </div>
+          <div class="status-led" data-status="inactive" id="interceptLed" title="Intercept Active">
+            <span class="status-led__light"></span>
+            <span class="status-led__label">INT</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-bar__center">
+        <div class="filter-command">
+          <span class="filter-command__prefix">filter:</span>
+          <input type="text" class="filter-command__input" id="filterInput"
+                 placeholder="request.method == &quot;POST&quot; && response.status >= 400"
+                 spellcheck="false">
+          <button class="filter-command__clear" id="clearFilter" title="Clear filter">×</button>
+        </div>
+      </div>
+
+      <div class="control-bar__right">
+        <div class="theme-selector">
+          <label for="themeSelect" class="theme-selector__label">Theme</label>
+          <select id="themeSelect" class="theme-select" title="Select theme">
+            <option value="midnight">Midnight Protocol</option>
+            <option value="terminal">Terminal Classic</option>
+            <option value="daylight">Daylight Operations</option>
+            <option value="ember">Ember Watch</option>
+            <option value="neon">Neon Grid</option>
+            <option value="frost">Frost Lab</option>
+            <option value="oxide">Oxide Console</option>
+            <option value="ultraviolet">Ultraviolet</option>
+            <option value="monochrome">Monochrome</option>
+          </select>
+        </div>
+
+        <div class="control-divider"></div>
+
+        <div class="action-cluster">
+          <button class="action-btn action-btn--record" id="toggleRecord" title="Toggle Recording">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>
+            <span>REC</span>
+          </button>
+          <button class="action-btn" id="clearBuffer" title="Clear Buffer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M8 6V4h8v2M5 6v14a2 2 0 002 2h10a2 2 0 002-2V6"/>
+            </svg>
+          </button>
+          <button class="action-btn" id="saveAll" title="Save All">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-panel">
+      <!-- Request List -->
+      <section class="request-list-panel">
+        <div class="panel-header">
+          <h2 class="panel-header__title">
+            <span class="panel-header__count" id="requestCount">0</span>
+            Interactions
+          </h2>
+          <div class="panel-header__actions">
+            <button class="mini-btn" id="markAll" title="Mark All Visible">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            </button>
+            <button class="mini-btn" id="saveMarked" title="Save Marked">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="request-list" id="requestList">
+          <!-- Request items will be inserted here -->
+          <div class="request-list__empty" id="emptyState">
+            <div class="empty-state">
+              <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+              </svg>
+              <p class="empty-state__text">Waiting for requests...</p>
+              <p class="empty-state__hint">Point your app to this proxy to see traffic</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Detail Panel -->
+      <section class="detail-panel" id="detailPanel">
+        <div class="detail-panel__empty">
+          <p>Select a request to inspect</p>
+        </div>
+
+        <div class="detail-panel__content" id="detailContent" style="display: none;">
+          <div class="detail-header">
+            <div class="detail-header__main">
+              <span class="detail-method" id="detailMethod">GET</span>
+              <span class="detail-path" id="detailPath">/v1/messages</span>
+              <span class="detail-status" id="detailStatus">200</span>
+            </div>
+            <div class="detail-header__meta">
+              <span class="detail-meta" id="detailTime">0ms</span>
+              <span class="detail-meta" id="detailSize">0 B</span>
+              <span class="detail-meta detail-meta--provider" id="detailProvider">—</span>
+            </div>
+            <div class="detail-header__actions">
+              <button class="action-btn action-btn--small" id="replayRequest" title="Replay Request">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <span>Replay</span>
+              </button>
+              <button class="action-btn action-btn--small" id="copyAsCurl" title="Copy as cURL">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                </svg>
+                <span>cURL</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="detail-tabs">
+            <button class="detail-tab detail-tab--active" data-tab="request">Request</button>
+            <button class="detail-tab" data-tab="response">Response</button>
+            <button class="detail-tab" data-tab="timing">Timing</button>
+          </div>
+
+          <div class="detail-body">
+            <!-- Request Tab -->
+            <div class="detail-tab-content detail-tab-content--active" data-content="request">
+              <div class="code-section">
+                <div class="code-section__header">
+                  <span>Headers</span>
+                  <button class="copy-btn" data-copy="requestHeaders">Copy</button>
+                </div>
+                <pre class="code-block" id="requestHeaders"></pre>
+              </div>
+              <div class="code-section">
+                <div class="code-section__header">
+                  <span>Body</span>
+                  <button class="copy-btn" data-copy="requestBody">Copy</button>
+                </div>
+                <pre class="code-block code-block--json" id="requestBody"></pre>
+              </div>
+            </div>
+
+            <!-- Response Tab -->
+            <div class="detail-tab-content" data-content="response">
+              <div class="code-section">
+                <div class="code-section__header">
+                  <span>Headers</span>
+                  <button class="copy-btn" data-copy="responseHeaders">Copy</button>
+                </div>
+                <pre class="code-block" id="responseHeaders"></pre>
+              </div>
+              <div class="code-section">
+                <div class="code-section__header">
+                  <span>Body</span>
+                  <button class="copy-btn" data-copy="responseBody">Copy</button>
+                </div>
+                <pre class="code-block code-block--json" id="responseBody"></pre>
+              </div>
+            </div>
+
+            <!-- Timing Tab (for streaming) -->
+            <div class="detail-tab-content" data-content="timing">
+              <div class="timing-view">
+                <div class="timing-header">
+                  <span class="timing-stat">
+                    <span class="timing-stat__label">TTFB</span>
+                    <span class="timing-stat__value" id="timingTTFB">—</span>
+                  </span>
+                  <span class="timing-stat">
+                    <span class="timing-stat__label">Total</span>
+                    <span class="timing-stat__value" id="timingTotal">—</span>
+                  </span>
+                  <span class="timing-stat">
+                    <span class="timing-stat__label">Chunks</span>
+                    <span class="timing-stat__value" id="timingChunks">—</span>
+                  </span>
+                </div>
+                <div class="timing-waveform" id="timingWaveform">
+                  <canvas id="waveformCanvas"></canvas>
+                </div>
+                <div class="chunk-list" id="chunkList">
+                  <!-- Chunk entries will be inserted here -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Status Bar -->
+    <footer class="status-bar">
+      <div class="status-bar__left">
+        <span class="status-item">
+          <span class="status-item__label">Buffer:</span>
+          <span class="status-item__value" id="bufferCount">0 / 1000</span>
+        </span>
+        <span class="status-item">
+          <span class="status-item__label">Recording:</span>
+          <span class="status-item__value status-item__value--inactive" id="recordingStatus">OFF</span>
+        </span>
+      </div>
+      <div class="status-bar__center">
+        <span class="status-item" id="interceptStatus" style="display: none;">
+          <span class="status-item__label">Intercept:</span>
+          <span class="status-item__value status-item__value--active" id="interceptPattern"></span>
+        </span>
+      </div>
+      <div class="status-bar__right">
+        <span class="status-item">
+          <span class="status-item__label">Scenario:</span>
+          <span class="status-item__value" id="scenarioStep">—</span>
+        </span>
+        <span class="status-item status-item--version">v0.1.0</span>
+      </div>
+    </footer>
+
+    <!-- Intercept Modal -->
+    <div class="modal" id="interceptModal" style="display: none;">
+      <div class="modal__backdrop"></div>
+      <div class="modal__content">
+        <div class="modal__header">
+          <h3>Intercepted Request</h3>
+          <button class="modal__close" id="closeInterceptModal">×</button>
+        </div>
+        <div class="modal__body">
+          <div class="intercept-editor">
+            <div class="intercept-section">
+              <label>Request Headers</label>
+              <textarea id="interceptHeaders" rows="6" spellcheck="false"></textarea>
+            </div>
+            <div class="intercept-section">
+              <label>Request Body</label>
+              <textarea id="interceptBody" rows="12" spellcheck="false"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button class="modal-btn modal-btn--danger" id="dropRequest">Drop</button>
+          <button class="modal-btn modal-btn--primary" id="releaseRequest">Release</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
