@@ -8,22 +8,22 @@ use std::{
 
 use anyhow::{Context, Result};
 use axum::{
+    Json, Router,
     body::Body,
     extract::{Path, Query, State, WebSocketUpgrade},
     http::{HeaderMap, Method, Response, StatusCode, Uri},
     response::IntoResponse,
     routing::{any, get, post, put},
-    Json, Router,
 };
-use cel::{to_value as cel_to_value, Context as CelContext, Program, Value as CelValue};
+use cel::{Context as CelContext, Program, Value as CelValue, to_value as cel_to_value};
 use chrono::{DateTime, Utc};
 use clap::{Parser, ValueEnum};
 use futures::stream::StreamExt;
 use regex::Regex;
 use reqwest::header::HeaderName;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
-use tokio::sync::{broadcast, oneshot, Mutex};
+use serde_json::{Value, json};
+use tokio::sync::{Mutex, broadcast, oneshot};
 use tower_http::cors::CorsLayer;
 use uuid::Uuid;
 
@@ -328,10 +328,10 @@ async fn proxy_handler_impl(
     }
 
     let mut request_body = bytes_to_value(&body);
-    if let Some(modifier) = &state.body_modifier {
-        if let Some(updated) = apply_modifier(&request_body, modifier) {
-            request_body = updated;
-        }
+    if let Some(modifier) = &state.body_modifier
+        && let Some(updated) = apply_modifier(&request_body, modifier)
+    {
+        request_body = updated;
     }
 
     let mut stored_req = StoredRequest {
@@ -723,13 +723,10 @@ async fn curl_request_handler(
     };
 
     let mut cmd = format!(
-        "curl -X {} '{}'",
+        "curl -X {} '{}{}'",
         item.request.method,
-        format!(
-            "{}{}",
-            state.args.upstream.trim_end_matches('/'),
-            item.request.path
-        )
+        state.args.upstream.trim_end_matches('/'),
+        item.request.path
     );
     for (k, v) in &item.request.headers {
         cmd.push_str(&format!(" -H '{}: {}'", k, v));
@@ -1108,7 +1105,7 @@ const STYLE_CSS: &str = include_str!("../ui/style.css");
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::{body::to_bytes, routing::get, routing::post, Router};
+    use axum::{Router, body::to_bytes, routing::get, routing::post};
     use tempfile::tempdir;
 
     async fn spawn_upstream() -> SocketAddr {
