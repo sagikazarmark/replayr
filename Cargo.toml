@@ -1,6 +1,6 @@
 [package]
 name = "replayr"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2024"
 description = "An API record/replay/simulation proxy"
 license = "MIT"
