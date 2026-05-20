@@ -45,7 +45,7 @@ RUN xx-verify ./target/$(xx-cargo --print-target-triple)/release/replayr
 RUN cp -r ./target/$(xx-cargo --print-target-triple)/release/replayr /usr/local/bin/replayr
 
 
-FROM debian:13.3-slim@sha256:1d3c811171a08a5adaa4a163fbafd96b61b87aa871bbc7aa15431ac275d3d430
+FROM debian:13.5-slim@sha256:b6e2a152f22a40ff69d92cb397223c906017e1391a73c952b588e51af8883bf8
 
 COPY --from=builder /usr/local/bin/replayr /usr/local/bin/
 
